@@ -14,14 +14,12 @@ public class Battery extends Component {
         int w = (rotation % 2 == 0) ? width : height;
         int h = (rotation % 2 == 0) ? height : width;
 
-        // Vẽ hộp nguồn điện (Style Cyberpunk)
         g2.setColor(Color.BLACK);
         g2.fillRect(x + 10, y, w - 20, h);
-        g2.setColor(new Color(0, 255, 255)); // Cyan Border
+        g2.setColor(new Color(0, 255, 255));
         g2.setStroke(new BasicStroke(2));
         g2.drawRect(x + 10, y, w - 20, h);
 
-        // Các cực
         g2.drawLine(x, y + h/2, x + 10, y + h/2);
         g2.drawLine(x + w - 10, y + h/2, x + w, y + h/2);
 

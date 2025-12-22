@@ -12,13 +12,13 @@ public class Wire extends Component {
         int h = (rotation % 2 == 0) ? height : width;
 
         if (isPowered) {
-            g2.setColor(new Color(0, 255, 0)); // Neon Green
+            g2.setColor(new Color(0, 255, 0));
             g2.setStroke(new BasicStroke(4));
             g2.drawLine(x, y + h/2, x + w, y + h/2);
             g2.setColor(new Color(200, 255, 200));
             g2.setStroke(new BasicStroke(1));
         } else {
-            g2.setColor(new Color(100, 100, 100)); // Màu xám tối
+            g2.setColor(new Color(100, 100, 100));
             g2.setStroke(new BasicStroke(2));
         }
 

@@ -23,7 +23,6 @@ public abstract class Component {
 
     public void setPowered(boolean p) { this.isPowered = p; }
 
-    // Phương thức trừu tượng để con tự vẽ
     public abstract void draw(Graphics2D g2);
 
     public Rectangle getBounds() {
@@ -37,7 +36,7 @@ public abstract class Component {
     public boolean isTouching(Component other) {
         if (this == other) return false;
         Rectangle r1 = getBounds();
-        r1.grow(5, 5); // Tăng vùng va chạm để dễ nối
+        r1.grow(5, 5);
         return r1.intersects(other.getBounds());
     }
 }

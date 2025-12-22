@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public class CircuitBoard extends JPanel {
     private List<Component> components = new ArrayList<>();
@@ -13,22 +12,20 @@ public class CircuitBoard extends JPanel {
     private int dragOffsetX, dragOffsetY;
     private boolean levelComplete = false;
 
-    private Consumer<String> logger;
+    private String hudVoltage = "-- V";
+    private String hudResistance = "-- Ω";
+    private String hudCurrent = "-- A";
+    private String hudStatus = "STANDBY";
+    private Color hudColor = Color.GRAY;
+    private boolean showHud = false;
 
     public CircuitBoard() {
-        this(System.out::println);
-    }
-
-    // Constructor chính
-    public CircuitBoard(Consumer<String> logger) {
-        this.logger = (logger != null) ? logger : (msg -> {});
-
         setBackground(new Color(20, 20, 30));
 
-        // Xử lý chuột (Kéo thả & Xoay)
         MouseAdapter ma = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
+                resetHud();
                 for (int i = components.size() - 1; i >= 0; i--) {
                     Component c = components.get(i);
                     if (c.contains(e.getPoint())) {
@@ -48,9 +45,8 @@ public class CircuitBoard extends JPanel {
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (selectedComponent != null) {
-                    // Hít vào lưới 20px
-                    selectedComponent.x = Math.round((float)selectedComponent.x / 20) * 20;
-                    selectedComponent.y = Math.round((float)selectedComponent.y / 20) * 20;
+                    selectedComponent.x = Math.round((float) selectedComponent.x / 20) * 20;
+                    selectedComponent.y = Math.round((float) selectedComponent.y / 20) * 20;
                     selectedComponent = null;
                     repaint();
                 }
@@ -70,28 +66,32 @@ public class CircuitBoard extends JPanel {
         });
     }
 
+    private void resetHud() {
+        showHud = false;
+        hudStatus = "EDITING...";
+        hudColor = Color.GRAY;
+        repaint();
+    }
+
     public void addComponent(Component c) {
         c.x = 100 + (components.size() * 10) % 300;
         c.y = 100 + (components.size() * 10) % 300;
         components.add(c);
-        repaint();
+        resetHud();
     }
 
     public void resetBoard() {
         components.clear();
         levelComplete = false;
+        resetHud();
         repaint();
     }
 
     public void simulate() {
-        logger.accept("--------------------------------");
-        logger.accept(">> SYSTEM DIAGNOSTICS INITIATED...");
-
-        // 1. Reset
         for (Component c : components) c.setPowered(false);
         levelComplete = false;
+        showHud = true;
 
-        // 2. Tìm nguồn
         Battery source = null;
         for (Component c : components) {
             if (c instanceof Battery) {
@@ -101,62 +101,58 @@ public class CircuitBoard extends JPanel {
         }
 
         if (source == null) {
-            logger.accept("ERROR: POWER SOURCE NOT FOUND!");
+            hudStatus = "NO POWER";
+            hudColor = Color.RED;
+            hudVoltage = "0 V";
+            hudResistance = "∞ Ω";
+            hudCurrent = "0 A";
+            repaint();
             return;
         }
 
         double voltage = source.getValue();
-        logger.accept(String.format(">> SOURCE DETECTED: %.1fV", voltage));
+        hudVoltage = String.format("%.1f V", voltage);
 
-        // 3. Quét mạch để tìm kết nối
         Set<Component> visited = new HashSet<>();
-        List<Component> connectedComponents = new ArrayList<>();
+        List<Component> connected = new ArrayList<>();
+        findConnectedPath(source, visited, connected);
 
-        findConnectedPath(source, visited, connectedComponents);
-
-        // 4. Tính toán
-        double totalResistance = 0;
+        double totalR = 0;
         boolean bulbFound = false;
 
-        for (Component c : connectedComponents) {
+        for (Component c : connected) {
             c.setPowered(true);
-
-            if (c instanceof Resistor) {
-                totalResistance += c.getValue();
-            }
-            if (c instanceof Bulb) {
-                bulbFound = true;
-                levelComplete = true;
-            }
+            if (c instanceof Resistor) totalR += c.getValue();
+            if (c instanceof Bulb) bulbFound = true;
         }
 
-        // 5. Xuất báo cáo
-        logger.accept(">> SCAN COMPLETE.");
-        logger.accept(String.format(">> TOTAL RESISTANCE: %.1f Ω", totalResistance));
+        hudResistance = String.format("%.1f Ω", totalR);
 
         if (bulbFound) {
-            if (totalResistance > 0) {
-                double current = voltage / totalResistance;
-                logger.accept(String.format(">> CIRCUIT CURRENT: %.4f A", current));
-                logger.accept(String.format(">> VOLTAGE DROP: %.1f V", voltage));
-                logger.accept("SUCCESS: TARGET (BULB) IS ONLINE.");
+            levelComplete = true;
+            if (totalR > 0) {
+                double I = voltage / totalR;
+                hudCurrent = String.format("%.4f A", I);
+                hudStatus = "ONLINE";
+                hudColor = Color.GREEN;
             } else {
-                logger.accept("WARNING: SHORT CIRCUIT! (Infinite Current)");
-                logger.accept(">> SAFETY FUSE ENGAGED.");
+                hudCurrent = "INFINITE";
+                hudStatus = "SHORT CIRCUIT";
+                hudColor = Color.RED;
                 levelComplete = false;
             }
         } else {
-            logger.accept("FAILURE: CIRCUIT OPEN. TARGET NOT REACHED.");
+            hudCurrent = "0 A";
+            hudStatus = "OPEN CIRCUIT";
+            hudColor = Color.ORANGE;
         }
 
         repaint();
     }
 
-    // Hàm đệ quy tìm đường đi
     private void findConnectedPath(Component current, Set<Component> visited, List<Component> list) {
         visited.add(current);
         list.add(current);
-
         for (Component neighbor : components) {
             if (!visited.contains(neighbor) && current.isTouching(neighbor)) {
                 findConnectedPath(neighbor, visited, list);
@@ -170,27 +166,44 @@ public class CircuitBoard extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Vẽ lưới
         g2.setColor(new Color(40, 40, 60));
         for (int i = 0; i < getWidth(); i += 40) g2.drawLine(i, 0, i, getHeight());
         for (int i = 0; i < getHeight(); i += 40) g2.drawLine(0, i, getWidth(), i);
 
-        // Vẽ linh kiện
         for (Component c : components) c.draw(g2);
 
-        if (levelComplete) {
-            g2.setColor(new Color(0, 0, 0, 180));
-            g2.fillRect(0, getHeight() / 2 - 60, getWidth(), 120);
-
-            g2.setFont(new Font("Impact", Font.ITALIC, 60));
-            g2.setColor(Color.GREEN);
-            String msg = "CIRCUIT ACTIVE";
-            int w = g2.getFontMetrics().stringWidth(msg);
-            g2.drawString(msg, getWidth()/2 - w/2, getHeight()/2 + 20);
-
-            g2.setFont(new Font("Arial", Font.BOLD, 20));
-            g2.setColor(Color.WHITE);
-            g2.drawString("SYSTEM ONLINE - GOOD JOB", getWidth()/2 - 140, getHeight()/2 + 50);
+        if (showHud) {
+            drawHUD(g2);
         }
+    }
+
+    private void drawHUD(Graphics2D g2) {
+        int x = 20;
+        int y = 20;
+        int w = 220;
+        int h = 130;
+
+        g2.setColor(new Color(0, 0, 0, 200));
+        g2.fillRoundRect(x, y, w, h, 15, 15);
+
+        g2.setColor(hudColor);
+        g2.setStroke(new BasicStroke(2));
+        g2.drawRoundRect(x, y, w, h, 15, 15);
+
+        g2.setFont(new Font("Consolas", Font.BOLD, 16));
+        g2.drawString("SYSTEM MONITOR", x + 40, y + 25);
+        g2.drawLine(x + 10, y + 35, x + w - 10, y + 35);
+
+        g2.setFont(new Font("Consolas", Font.PLAIN, 14));
+        g2.setColor(Color.CYAN);
+        g2.drawString("Voltage: " + hudVoltage, x + 20, y + 60);
+        g2.setColor(Color.MAGENTA);
+        g2.drawString("Resist : " + hudResistance, x + 20, y + 80);
+        g2.setColor(Color.YELLOW);
+        g2.drawString("Current: " + hudCurrent, x + 20, y + 100);
+
+        g2.setFont(new Font("Arial", Font.BOLD, 12));
+        g2.setColor(hudColor);
+        g2.drawString(hudStatus, x + w - 100, y + 120);
     }
 }
