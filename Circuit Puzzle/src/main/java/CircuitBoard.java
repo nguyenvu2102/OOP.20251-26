@@ -93,7 +93,7 @@ public class CircuitBoard extends JPanel {
     }
 
     public void simulate() {
-        //Reset 
+        // reset tt
         for (Component c : components) c.setPowered(false);
         levelComplete = false;
         showHud = true;
@@ -107,32 +107,52 @@ public class CircuitBoard extends JPanel {
         }
 
         if (source == null) {
+            hudStatus = "NO SOURCE";
+            hudColor = Color.RED;
+            repaint();
             return;
         }
 
-        //tìm linh kiện kết nối
+        // DFS tim thiet bi ket noi
         Set<Component> visited = new HashSet<>();
         List<Component> connected = new ArrayList<>();
         findConnectedPath(source, visited, connected);
-        
+
+        // check mach
         boolean isClosedLoop = checkIsClosedLoop(source, connected);
 
-        double totalR = 0;
-        boolean bulbFound = false;
-
         if (isClosedLoop) {
+            double totalV = source.getValue();
+            double totalR = 0;
+            boolean bulbFound = false;
+
             for (Component c : connected) {
-                c.setPowered(true); // Chỉ thắp sáng khi mạch kín
+                c.setPowered(true);
                 if (c instanceof Resistor) totalR += c.getValue();
                 if (c instanceof Bulb) bulbFound = true;
             }
-        }
-        
-        if (isClosedLoop && bulbFound) {
+
+            hudVoltage = String.format("%.1f V", totalV);
+            hudResistance = String.format("%.1f Ω", totalR);
+
+            if (totalR > 0) {
+                double current = totalV / totalR;
+                hudCurrent = String.format("%.4f A", current);
+            } else {
+                hudCurrent = "INFINITY (Short)"; //doan mach
+            }
+
+            hudStatus = "ONLINE";
+            hudColor = Color.GREEN;
+            levelComplete = bulbFound;
         } else {
+            hudVoltage = "-- V";
+            hudResistance = "-- Ω";
+            hudCurrent = "-- A";
             hudStatus = "OPEN CIRCUIT";
             hudColor = Color.ORANGE;
         }
+
         repaint();
     }
 
