@@ -1,5 +1,3 @@
-package components;
-
 import java.awt.*;
 
 public interface Editable {

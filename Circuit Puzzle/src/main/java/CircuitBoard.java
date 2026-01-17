@@ -1,5 +1,3 @@
-package components;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -7,7 +5,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 public class CircuitBoard extends JPanel {
     private List<Component> components = new ArrayList<>();
     private Component selectedComponent = null;
