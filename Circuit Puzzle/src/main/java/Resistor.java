@@ -3,10 +3,22 @@ import java.awt.geom.AffineTransform;
 
 public class Resistor extends Component {
     public Resistor(int x, int y) { super(x, y, "Resistor"); }
+    private double resistance = 100.0;
 
     @Override
-    public double getValue() { return 100.0; }
+    public double getValue() { return resistance; }
 
+    @Override
+    public void editValue() {
+        String input = javax.swing.JOptionPane.showInputDialog("Resistance Input:", resistance);
+        if (input != null) {
+            try {
+                resistance = Double.parseDouble(input);
+            } catch (NumberFormatException e) {
+                //
+            }
+        }
+    }
     @Override
     public void draw(Graphics2D g2) {
         AffineTransform old = g2.getTransform();
@@ -26,7 +38,7 @@ public class Resistor extends Component {
         g2.drawPolyline(xp, yp, xp.length);
 
         g2.setFont(new Font("Consolas", Font.PLAIN, 10));
-        g2.drawString("100Ω", x + w/3, y + h + 12);
+        g2.drawString(String.format("%.0fΩ", resistance), x + w/3, y + h + 12);
         g2.setTransform(old);
     }
 }

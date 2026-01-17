@@ -3,10 +3,21 @@ import java.awt.geom.AffineTransform;
 
 public class Battery extends Component {
     public Battery(int x, int y) { super(x, y, "Source"); }
+    private double voltage = 9.0;
 
     @Override
-    public double getValue() { return 9.0; }
+    public double getValue() { return voltage; }
 
+    @Override
+    public void editValue() {
+        String input = javax.swing.JOptionPane.showInputDialog("Volt input:", voltage);
+        if (input != null) {
+            try {
+                voltage = Double.parseDouble(input);
+            } catch (NumberFormatException e) {
+            }
+        }
+    }
     @Override
     public void draw(Graphics2D g2) {
         AffineTransform old = g2.getTransform();
@@ -24,7 +35,7 @@ public class Battery extends Component {
         g2.drawLine(x + w - 10, y + h/2, x + w, y + h/2);
 
         g2.setFont(new Font("Arial", Font.BOLD, 12));
-        g2.drawString("PWR", x + 25, y + 25);
+        g2.drawString(String.format("%.0fV",voltage), x + 35, y + 25);
         g2.setTransform(old);
     }
 }

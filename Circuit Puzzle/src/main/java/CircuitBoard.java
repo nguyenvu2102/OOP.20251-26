@@ -29,6 +29,11 @@ public class CircuitBoard extends JPanel {
                 for (int i = components.size() - 1; i >= 0; i--) {
                     Component c = components.get(i);
                     if (c.contains(e.getPoint())) {
+                        if (e.getClickCount() == 2) {
+                            c.editValue();
+                            repaint();
+                            return;
+                        }
                         if (SwingUtilities.isRightMouseButton(e)) {
                             c.rotate();
                             repaint();
@@ -88,6 +93,7 @@ public class CircuitBoard extends JPanel {
     }
 
     public void simulate() {
+        //Reset 
         for (Component c : components) c.setPowered(false);
         levelComplete = false;
         showHud = true;
@@ -101,53 +107,47 @@ public class CircuitBoard extends JPanel {
         }
 
         if (source == null) {
-            hudStatus = "NO POWER";
-            hudColor = Color.RED;
-            hudVoltage = "0 V";
-            hudResistance = "∞ Ω";
-            hudCurrent = "0 A";
-            repaint();
             return;
         }
 
-        double voltage = source.getValue();
-        hudVoltage = String.format("%.1f V", voltage);
-
+        //tìm linh kiện kết nối
         Set<Component> visited = new HashSet<>();
         List<Component> connected = new ArrayList<>();
         findConnectedPath(source, visited, connected);
+        
+        boolean isClosedLoop = checkIsClosedLoop(source, connected);
 
         double totalR = 0;
         boolean bulbFound = false;
 
-        for (Component c : connected) {
-            c.setPowered(true);
-            if (c instanceof Resistor) totalR += c.getValue();
-            if (c instanceof Bulb) bulbFound = true;
-        }
-
-        hudResistance = String.format("%.1f Ω", totalR);
-
-        if (bulbFound) {
-            levelComplete = true;
-            if (totalR > 0) {
-                double I = voltage / totalR;
-                hudCurrent = String.format("%.4f A", I);
-                hudStatus = "ONLINE";
-                hudColor = Color.GREEN;
-            } else {
-                hudCurrent = "INFINITE";
-                hudStatus = "SHORT CIRCUIT";
-                hudColor = Color.RED;
-                levelComplete = false;
+        if (isClosedLoop) {
+            for (Component c : connected) {
+                c.setPowered(true); // Chỉ thắp sáng khi mạch kín
+                if (c instanceof Resistor) totalR += c.getValue();
+                if (c instanceof Bulb) bulbFound = true;
             }
+        }
+        
+        if (isClosedLoop && bulbFound) {
         } else {
-            hudCurrent = "0 A";
             hudStatus = "OPEN CIRCUIT";
             hudColor = Color.ORANGE;
         }
-
         repaint();
+    }
+
+    private boolean checkIsClosedLoop(Battery source, List<Component> connected) {
+        if (connected.size() < 2) return false;
+
+        int contactCount = 0;
+        for (Component c : components) {
+            if (c == source) continue;
+            if (source.isTouching(c) && connected.contains(c)) {
+                contactCount++;
+            }
+        }
+
+        return contactCount >= 2;
     }
 
     private void findConnectedPath(Component current, Set<Component> visited, List<Component> list) {

@@ -20,7 +20,8 @@ public abstract class Component {
         width = height;
         height = temp;
     }
-
+    public void editValue() {
+    }
     public void setPowered(boolean p) { this.isPowered = p; }
 
     public abstract void draw(Graphics2D g2);
