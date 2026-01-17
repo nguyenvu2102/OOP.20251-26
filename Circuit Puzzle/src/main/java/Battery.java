@@ -1,7 +1,10 @@
+package components;
+
+import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
-public class Battery extends Component {
+public class Battery extends Component implements Editable {
     public Battery(int x, int y) { super(x, y, "Source"); }
     private double voltage = 9.0;
 
@@ -15,6 +18,7 @@ public class Battery extends Component {
             try {
                 voltage = Double.parseDouble(input);
             } catch (NumberFormatException e) {
+                javax.swing.JOptionPane.showMessageDialog(null,"Invalid input !", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -34,8 +38,10 @@ public class Battery extends Component {
         g2.drawLine(x, y + h/2, x + 10, y + h/2);
         g2.drawLine(x + w - 10, y + h/2, x + w, y + h/2);
 
-        g2.setFont(new Font("Arial", Font.BOLD, 12));
-        g2.drawString(String.format("%.0fV",voltage), x + 35, y + 25);
+        Font font = new Font("Arial", Font.BOLD, 12);
+        String string = String.format("%.0fV",voltage);
+        Editable.drawStringCentered(g2, string, x, y + 25, w, font);
+
         g2.setTransform(old);
     }
 }
