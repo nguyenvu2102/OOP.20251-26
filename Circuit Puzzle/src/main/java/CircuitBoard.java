@@ -1,3 +1,5 @@
+package components;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -29,10 +31,12 @@ public class CircuitBoard extends JPanel {
                 for (int i = components.size() - 1; i >= 0; i--) {
                     Component c = components.get(i);
                     if (c.contains(e.getPoint())) {
-                        if (e.getClickCount() == 2) {
-                            c.editValue();
-                            repaint();
-                            return;
+                        if (c instanceof Editable){
+                            if (e.getClickCount() == 2) {
+                                ((Editable) c).editValue();
+                                repaint();
+                                return;
+                            }
                         }
                         if (SwingUtilities.isRightMouseButton(e)) {
                             c.rotate();

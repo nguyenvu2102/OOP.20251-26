@@ -1,8 +1,11 @@
+package components;
+
+import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 
-public class Resistor extends Component {
-    public Resistor(int x, int y) { super(x, y, "Resistor"); }
+public class Resistor extends Component implements Editable{
+    public Resistor(int x, int y) { super(x, y, "components.Resistor"); }
     private double resistance = 100.0;
 
     @Override
@@ -15,7 +18,7 @@ public class Resistor extends Component {
             try {
                 resistance = Double.parseDouble(input);
             } catch (NumberFormatException e) {
-                //
+                javax.swing.JOptionPane.showMessageDialog(null,"Invalid input !", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -37,8 +40,10 @@ public class Resistor extends Component {
         int[] yp = {y+h/2, y+h/2-10, y+h/2+10, y+h/2-10, y+h/2+10, y+h/2-10, y+h/2};
         g2.drawPolyline(xp, yp, xp.length);
 
-        g2.setFont(new Font("Consolas", Font.PLAIN, 10));
-        g2.drawString(String.format("%.0fΩ", resistance), x + w/3, y + h + 12);
+        Font font = new Font("Consolas", Font.PLAIN, 10);
+        String string = String.format("%.0fΩ", resistance);
+        Editable.drawStringCentered(g2, string, x, y + h + 12, w, font);
+
         g2.setTransform(old);
     }
 }

@@ -1,3 +1,5 @@
+package components;
+
 import java.awt.*;
 
 public abstract class Component {
@@ -19,8 +21,6 @@ public abstract class Component {
         int temp = width;
         width = height;
         height = temp;
-    }
-    public void editValue() {
     }
     public void setPowered(boolean p) { this.isPowered = p; }
 
