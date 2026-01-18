@@ -1,8 +1,8 @@
 import java.awt.*;
 
 public interface Editable {
-    default void editValue() {
-    }
+    double getValue();
+    void editValue();
     static void drawStringCentered(Graphics2D g2, String text, int x, int y, int w, Font font){
         FontMetrics metrics = g2.getFontMetrics(font);
         g2.setFont(font);

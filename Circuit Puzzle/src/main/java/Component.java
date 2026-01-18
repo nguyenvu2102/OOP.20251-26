@@ -6,8 +6,6 @@ public abstract class Component {
     protected int rotation = 0;
     protected boolean isPowered = false;
     protected String name;
-
-    public double getValue() { return 0; }
     public Component(int x, int y, String name) {
         this.x = x;
         this.y = y;
